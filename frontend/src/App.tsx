@@ -16,10 +16,17 @@ export default function App() {
     <BrowserRouter>
       <nav className="topnav">
         <div className="nav-logo">
-          <span style={{ fontSize: 22 }}>🌫️</span>
-          <span className="font-bold text-xl tracking-tight text-white">
-            AeroSmog<span className="text-accent">.AI</span>
-          </span>
+          <img
+            src="/logo.jpg"
+            alt="AeroSmog.AI"
+            style={{
+              height: 32,
+              width: 'auto',
+              borderRadius: 4,
+              /* blend black background of logo with dark nav */
+              mixBlendMode: 'screen',
+            }}
+          />
           <span className="badge badge-green" style={{ marginLeft: 4 }}>
             <span className="pulse" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#00e400' }} />
             Live
