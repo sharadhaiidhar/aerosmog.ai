@@ -12,6 +12,7 @@ import { GenZFeatures } from '../components/GenZFeatures';
 import { ForecastStrip } from '../components/ForecastStrip';
 import { TrendChart } from '../components/TrendChart';
 import { CardSkeleton } from '../components/Skeleton';
+import { AtmosphericBackground } from '../components/AtmosphericBackground';
 import { getAqiInfo, getRiskColor } from '../utils/aqi';
 
 export default function Dashboard() {
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [locLoading, setLocLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [themeOverride, setThemeOverride] = useState<string | null>(null);
 
   useEffect(() => {
     setLocLoading(true);
@@ -63,32 +65,92 @@ export default function Dashboard() {
   const aqiInfo = advisory ? getAqiInfo(advisory.aqi.aqi) : null;
 
   return (
-    <div className="page space-y">
-      {/* Header */}
-      <div className="flex-between flex-wrap gap-3">
-        <div>
-          <div className="flex-center gap-2">
-            <MapPin size={15} className="text-accent" />
-            <span className="font-bold text-lg text-white">
-              {location ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'Detecting...'}
-            </span>
-            {location && <span className="badge badge-accent">via {location.source}</span>}
-          </div>
-          {lastUpdated && (
-            <div className="flex-center gap-1 text-xs text-muted mt-1">
-              <Clock size={11} /> Updated {lastUpdated.toLocaleTimeString()}
+    <>
+      {/* ── Immersive Ambient Background (Sun Rays, 3D Clouds, Raindrops) ── */}
+      <AtmosphericBackground
+        weatherDesc={themeOverride || advisory?.weather?.weather_description || 'Clear'}
+        aqi={advisory?.aqi?.aqi}
+      />
+
+      <div className="page space-y" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div className="flex-between flex-wrap gap-3">
+          <div>
+            <div className="flex-center gap-2">
+              <MapPin size={15} className="text-accent" />
+              <span className="font-bold text-lg text-white">
+                {location ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'Detecting...'}
+              </span>
+              {location && <span className="badge badge-accent">via {location.source}</span>}
             </div>
-          )}
+            {lastUpdated && (
+              <div className="flex-center gap-1 text-xs text-muted mt-1">
+                <Clock size={11} /> Updated {lastUpdated.toLocaleTimeString()}
+              </div>
+            )}
+          </div>
+
+          {/* Ambience & Refresh controls */}
+          <div className="flex-center gap-2 flex-wrap">
+            {/* Quick Atmosphere Preview Pills */}
+            <div className="flex-center gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)' }}>
+              <button
+                type="button"
+                onClick={() => setThemeOverride(themeOverride === 'sunny' ? null : 'sunny')}
+                className="badge"
+                style={{
+                  background: themeOverride === 'sunny' ? 'rgba(255,215,0,0.3)' : 'transparent',
+                  color: '#ffd700',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+                title="Preview Golden Sun Rays"
+              >
+                ☀️ Sun
+              </button>
+              <button
+                type="button"
+                onClick={() => setThemeOverride(themeOverride === 'rain' ? null : 'rain')}
+                className="badge"
+                style={{
+                  background: themeOverride === 'rain' ? 'rgba(120,185,255,0.3)' : 'transparent',
+                  color: '#78b9ff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+                title="Preview 3D Clouds & Rain"
+              >
+                🌧️ Rain
+              </button>
+              <button
+                type="button"
+                onClick={() => setThemeOverride(themeOverride === 'cloudy' ? null : 'cloudy')}
+                className="badge"
+                style={{
+                  background: themeOverride === 'cloudy' ? 'rgba(200,210,230,0.3)' : 'transparent',
+                  color: '#c8d2e6',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+                title="Preview Volumetric Clouds"
+              >
+                ☁️ Clouds
+              </button>
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={fetchAll}
+              disabled={loading || !location}
+            >
+              <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
+              {loading ? 'Fetching...' : 'Refresh'}
+            </button>
+          </div>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={fetchAll}
-          disabled={loading || !location}
-        >
-          <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
-          {loading ? 'Fetching...' : 'Refresh'}
-        </button>
-      </div>
 
       {/* Error */}
       {error && (
@@ -179,5 +241,6 @@ export default function Dashboard() {
         );
       })()}
     </div>
+    </>
   );
 }
