@@ -1,0 +1,16 @@
+{
+  "appId": "ai.aerosmog.app",
+  "appName": "AeroSmog.AI",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "keystoreAlias": ""
+    }
+  }
+}

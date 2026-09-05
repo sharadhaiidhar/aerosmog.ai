@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import HistoryPage from './pages/History';
 import { HelicopterPatrol } from './components/HelicopterPatrol';
+import { InstallAppBanner } from './components/InstallAppBanner';
 
 const NAV = [
   { to: '/',         icon: <Wind size={18} />,    label: 'Dashboard' },
@@ -47,6 +48,7 @@ export default function App() {
           ))}
         </div>
       </nav>
+      <InstallAppBanner />
 
       <HelicopterPatrol />
 
