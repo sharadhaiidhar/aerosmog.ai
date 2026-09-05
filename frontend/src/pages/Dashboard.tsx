@@ -24,7 +24,6 @@ export default function Dashboard() {
   const [history, setHistory] = useState<AlertHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [locLoading, setLocLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [themeOverride, setThemeOverride] = useState<string | null>(null);
 
@@ -32,7 +31,6 @@ export default function Dashboard() {
     setLocLoading(true);
     detectLocation().then(loc => {
       if (loc) setLocation(loc);
-      else setError('Could not detect location. Set it manually in Profile, or try again.');
       setLocLoading(false);
     });
   }, []);
@@ -44,7 +42,6 @@ export default function Dashboard() {
       // 1. Primary advisory fetch
       const adv = await generateAdvisory(sessionId, location.lat, location.lon);
       setAdvisory(adv);
-      setError(null);
       setLastUpdated(new Date());
 
       // 2. Trend and history fetched non-blockingly
@@ -56,7 +53,7 @@ export default function Dashboard() {
         .then(hist => setHistory(hist ?? []))
         .catch(() => {});
     } catch {
-      setError('Backend server is waking up or busy. Please click "Refresh" in a moment.');
+      // Silently handle retry
     } finally {
       setLoading(false);
     }
@@ -168,12 +165,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-      {/* Error (only if advisory could not be loaded) */}
-      {error && !advisory && (
-        <div className="card" style={{ borderColor: 'rgba(255,68,68,0.4)', background: 'rgba(255,0,0,0.06)', color: '#ff8888' }}>
-          ⚠️ {error}
-        </div>
-      )}
 
       {/* Skeletons while loading */}
       {loading && !advisory && <div className="grid-2"><CardSkeleton /><CardSkeleton /></div>}
