@@ -334,6 +334,17 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            
+            <footer style={{ textAlign: 'center', padding: '24px 0 16px', fontSize: 11, color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginBottom: 6 }}>
+                <a href="/privacy" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Privacy Policy</a>
+                <span>•</span>
+                <span>AeroSmog.AI © 2026</span>
+                <span>•</span>
+                <a href="https://github.com/sharadhaiidhar/aerosmog.ai" target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>GitHub</a>
+              </div>
+              <div>Environmental Intelligence & Health Protection Platform</div>
+            </footer>
           </>
         );
       })()}

@@ -4,6 +4,7 @@ import { Wind, User, History } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import HistoryPage from './pages/History';
+import PrivacyPage from './pages/Privacy';
 import { HelicopterPatrol } from './components/HelicopterPatrol';
 import { InstallAppBanner } from './components/InstallAppBanner';
 
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/"        element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Routes>
       </main>
     </BrowserRouter>
