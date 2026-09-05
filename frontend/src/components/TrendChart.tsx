@@ -1,7 +1,7 @@
 // components/TrendChart.tsx — 7-day AQI trend line chart using Recharts
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine, Dot,
+  ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import type { TrendEntry } from '../types';
 import { getAqiInfo } from '../utils/aqi';
