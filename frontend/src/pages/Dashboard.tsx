@@ -47,7 +47,7 @@ export default function Dashboard() {
       setHistory(hist);
       setLastUpdated(new Date());
     } catch {
-      setError('Failed to generate advisory. Make sure the backend is running at localhost:8000.');
+      setError('Backend server is waking up or busy. Please click "Refresh" in a moment.');
     } finally { setLoading(false); }
   }, [location, sessionId]);
 

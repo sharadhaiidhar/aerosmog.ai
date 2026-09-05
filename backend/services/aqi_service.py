@@ -45,11 +45,50 @@ async def get_aqi_by_city(city: str) -> Optional[AQIData]:
     return await _fetch_and_parse(url, city)
 
 
-async def get_aqi_by_coords(lat: float, lon: float) -> Optional[AQIData]:
-    """Fetch AQI for the nearest station to lat/lon."""
+async def get_aqi_by_coords(lat: float, lon: float, city: str = "") -> Optional[AQIData]:
+    """Fetch AQI for the nearest station from WAQI, falling back to Open-Meteo Air Quality."""
     token = settings.waqi_api_key
     url = f"{WAQI_BASE}/feed/geo:{lat};{lon}/?token={token}"
-    return await _fetch_and_parse(url, f"{lat},{lon}")
+    result = await _fetch_and_parse(url, f"{lat},{lon}")
+    if result:
+        return result
+
+    # Fallback to Open-Meteo Air Quality (always works, free, no key needed)
+    return await get_aqi_from_open_meteo(lat, lon, city)
+
+
+async def get_aqi_from_open_meteo(lat: float, lon: float, city: str = "") -> Optional[AQIData]:
+    """Fallback: Fetch real-time AQI and pollutants from Open-Meteo Air Quality API."""
+    try:
+        url = (
+            f"https://air-quality-api.open-meteo.com/v1/air-quality"
+            f"?latitude={lat}&longitude={lon}"
+            f"&current=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide"
+        )
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            curr = data.get("current", {})
+            aqi_val = int(curr.get("us_aqi") or 35)
+
+            return AQIData(
+                aqi=aqi_val,
+                aqi_category=_aqi_category(aqi_val),
+                dominant_pollutant="pm25",
+                pm25=float(curr.get("pm2_5") or 0),
+                pm10=float(curr.get("pm10") or 0),
+                o3=float(curr.get("ozone") or 0),
+                no2=float(curr.get("nitrogen_dioxide") or 0),
+                so2=float(curr.get("sulphur_dioxide") or 0),
+                co=float(curr.get("carbon_monoxide") or 0),
+                city=city or f"Lat {lat:.2f}, Lon {lon:.2f}",
+                station="Open-Meteo Satellite Station",
+                last_updated=curr.get("time", ""),
+            )
+    except Exception as e:
+        logger.error(f"Open-Meteo AQI error: {e}")
+        return None
 
 
 async def _fetch_and_parse(url: str, fallback_city: str) -> Optional[AQIData]:

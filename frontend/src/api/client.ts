@@ -3,7 +3,7 @@ import axios from 'axios';
 import type { AdvisoryResponse, UserProfile, AlertHistory, TrendEntry } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://aerosmog-ai-1.onrender.com/api';
-const api = axios.create({ baseURL: BASE_URL, timeout: 60000 });
+const api = axios.create({ baseURL: BASE_URL, timeout: 90000 });
 
 // ── Location ──────────────────────────────────────────────────────────────────
 export const detectLocation = (lat?: number, lon?: number) =>
