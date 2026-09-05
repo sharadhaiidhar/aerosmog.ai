@@ -53,15 +53,31 @@ const getDefaultAdvisory = (city: string, lat: number, lon: number): AdvisoryRes
     'Keep rescue inhalers accessible if asthmatic',
     'Ventilate rooms during cleaner morning hours',
   ],
-  forecast: [
-    { date: 'Today', max_temp: 27, min_temp: 21, weather_description: 'Partly Cloudy', precipitation_sum: 0.2 },
-    { date: 'Tomorrow', max_temp: 28, min_temp: 22, weather_description: 'Mainly Clear', precipitation_sum: 0.0 },
-    { date: 'Day 3', max_temp: 26, min_temp: 20, weather_description: 'Overcast', precipitation_sum: 1.2 },
-    { date: 'Day 4', max_temp: 25, min_temp: 19, weather_description: 'Light Rain', precipitation_sum: 4.5 },
-    { date: 'Day 5', max_temp: 27, min_temp: 21, weather_description: 'Partly Cloudy', precipitation_sum: 0.0 },
-    { date: 'Day 6', max_temp: 29, min_temp: 22, weather_description: 'Clear Sky', precipitation_sum: 0.0 },
-    { date: 'Day 7', max_temp: 28, min_temp: 21, weather_description: 'Mainly Clear', precipitation_sum: 0.1 },
-  ],
+  forecast: (() => {
+    const mocks = [
+      { weather: 'Partly Cloudy', max: 28, min: 21, rain: 0.2 },
+      { weather: 'Mainly Clear', max: 29, min: 22, rain: 0.0 },
+      { weather: 'Overcast', max: 26, min: 20, rain: 1.2 },
+      { weather: 'Light Rain', max: 25, min: 19, rain: 4.5 },
+      { weather: 'Partly Cloudy', max: 27, min: 21, rain: 0.0 },
+      { weather: 'Clear Sky', max: 30, min: 22, rain: 0.0 },
+      { weather: 'Mainly Clear', max: 28, min: 21, rain: 0.1 },
+    ];
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return {
+        date: `${y}-${m}-${day}`,
+        max_temp: mocks[i].max,
+        min_temp: mocks[i].min,
+        weather_description: mocks[i].weather,
+        precipitation_sum: mocks[i].rain,
+      };
+    });
+  })(),
   generated_at: new Date().toISOString(),
 });
 
@@ -284,9 +300,23 @@ export default function Dashboard() {
                     <tbody>
                       {history.map(h => {
                         const info = getAqiInfo(h.aqi);
+                        let dateFormatted = h.created_at ? h.created_at.slice(0, 16).replace('T', ' ') : '—';
+                        try {
+                          if (h.created_at) {
+                            const d = new Date(h.created_at);
+                            if (!isNaN(d.getTime())) {
+                              dateFormatted = d.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              });
+                            }
+                          }
+                        } catch {}
                         return (
                           <tr key={h.id}>
-                            <td className="text-xs text-muted">{h.created_at.slice(0,16).replace('T',' ')}</td>
+                            <td className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>{dateFormatted}</td>
                             <td>{h.city}</td>
                             <td style={{ fontWeight: 700, color: info.color }}>{h.aqi}</td>
                             <td className="text-xs">{h.aqi_category}</td>

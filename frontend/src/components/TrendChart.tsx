@@ -16,11 +16,11 @@ function CustomDot(props: any) {
 
 function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
-  const d = payload[0].payload as TrendEntry;
+  const d = payload[0].payload as TrendEntry & { displayDate?: string; fullDate?: string };
   const info = getAqiInfo(d.aqi);
   return (
     <div className="card text-sm" style={{ padding: '10px 14px', minWidth: 140 }}>
-      <div style={{ color: '#9196a8' }}>{d.date}</div>
+      <div style={{ color: '#9196a8', fontWeight: 500 }}>{d.fullDate || d.date}</div>
       <div className="font-bold mt-1" style={{ color: info.color }}>
         AQI {d.aqi} — {d.aqi_category}
       </div>
@@ -35,7 +35,21 @@ export function TrendChart({ trend }: Props) {
     </div>
   );
 
-  const data = trend.map(t => ({ ...t, date: t.date.slice(5) }));
+  const data = trend.map(t => {
+    let displayDate = t.date;
+    let fullDate = t.date;
+    try {
+      if (t.date && t.date.includes('-')) {
+        const parts = t.date.split('-');
+        if (parts.length === 3) {
+          const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+          displayDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+          fullDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+      }
+    } catch {}
+    return { ...t, displayDate, fullDate };
+  });
 
   return (
     <div className="card">
@@ -43,7 +57,7 @@ export function TrendChart({ trend }: Props) {
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
           <CartesianGrid stroke="#2a2d3e" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="date" tick={{ fill: '#9196a8', fontSize: 12 }} axisLine={false} tickLine={false} />
+          <XAxis dataKey="displayDate" tick={{ fill: '#9196a8', fontSize: 12 }} axisLine={false} tickLine={false} />
           <YAxis domain={[0, 'auto']} tick={{ fill: '#9196a8', fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
           <Tooltip content={<CustomTooltip />} />
           {/* AQI zone bands */}

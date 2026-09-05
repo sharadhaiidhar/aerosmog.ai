@@ -73,7 +73,18 @@ export default function HistoryPage() {
                           <div>
                             <div className="font-semibold text-white text-sm">{h.city}</div>
                             <div className="text-xs" style={{ color: info.color }}>{h.aqi_category}</div>
-                            <div className="text-xs text-muted">{h.created_at.slice(0,16).replace('T',' ')}</div>
+                            <div className="text-xs text-muted">
+                              {(() => {
+                                try {
+                                  const d = new Date(h.created_at);
+                                  return !isNaN(d.getTime())
+                                    ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                    : h.created_at.slice(0, 16).replace('T', ' ');
+                                } catch {
+                                  return h.created_at.slice(0, 16).replace('T', ' ');
+                                }
+                              })()}
+                            </div>
                           </div>
                         </div>
                         <span className="badge" style={{
