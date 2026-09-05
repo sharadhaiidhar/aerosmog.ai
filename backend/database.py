@@ -18,6 +18,17 @@ engine = create_engine(
 def create_db_and_tables():
     """Called at app startup to create all tables."""
     SQLModel.metadata.create_all(engine)
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            for col in ["lat", "lon"]:
+                try:
+                    conn.execute(text(f"ALTER TABLE alert_history ADD COLUMN {col} FLOAT"))
+                    conn.commit()
+                except Exception:
+                    pass
+    except Exception:
+        pass
 
 
 def get_session():

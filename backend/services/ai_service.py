@@ -135,20 +135,28 @@ async def generate_advisory(
     try:
         from groq import AsyncGroq
         client = AsyncGroq(api_key=settings.groq_api_key)
-        response = await client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": "You are AeroSmog AI, a health advisory assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=200,
-            temperature=0.7,
-        )
-        text = response.choices[0].message.content.strip()
-        logger.info(f"Groq advisory generated for {city} (AQI={aqi})")
-        return text
+        
+        for model_name in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
+            try:
+                response = await client.chat.completions.create(
+                    model=model_name,
+                    messages=[
+                        {"role": "system", "content": "You are AeroSmog AI, a health advisory assistant."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    max_tokens=200,
+                    temperature=0.7,
+                )
+                text = response.choices[0].message.content.strip()
+                logger.info(f"Groq advisory generated using {model_name} for {city} (AQI={aqi})")
+                return text
+            except Exception as m_err:
+                logger.warning(f"Groq model {model_name} failed: {m_err}")
+                continue
+
+        return _fallback_advisory(aqi, aqi_category, health_condition, occupation, age_group)
     except Exception as e:
-        logger.warning(f"Groq API error: {e} — using fallback")
+        logger.warning(f"Groq client error: {e} — using fallback")
         return _fallback_advisory(aqi, aqi_category, health_condition, occupation, age_group)
 
 

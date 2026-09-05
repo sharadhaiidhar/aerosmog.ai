@@ -130,8 +130,12 @@ async def generate_health_advisory(
         health_condition=health_condition,
         occupation=occupation,
     )
-    db.add(alert)
-    db.commit()
+    try:
+        db.add(alert)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Could not persist alert to history: {e}")
 
     # ── 6. Build and return full response ───────────────────────────────────
     return AdvisoryResponse(
