@@ -8,6 +8,7 @@ import type { AdvisoryResponse, LocationResult, TrendEntry, AlertHistory } from 
 import { AqiGauge } from '../components/AqiGauge';
 import { WeatherCard } from '../components/WeatherCard';
 import { AdvisoryCard } from '../components/AdvisoryCard';
+import { GenZFeatures } from '../components/GenZFeatures';
 import { ForecastStrip } from '../components/ForecastStrip';
 import { TrendChart } from '../components/TrendChart';
 import { CardSkeleton } from '../components/Skeleton';
@@ -131,7 +132,10 @@ export default function Dashboard() {
             {/* Row 2: AI Advisory */}
             <AdvisoryCard text={advisory.advisory_text} risk={advisory.risk_level} actions={advisory.action_items} />
 
-            {/* Row 3: Forecast */}
+            {/* Row 3: Gen-Z Vibe & Smog Index */}
+            <GenZFeatures weather={advisory.weather} aqi={advisory.aqi} city={location?.city || 'Your City'} />
+
+            {/* Row 4: Forecast */}
             <ForecastStrip forecast={advisory.forecast} />
 
             {/* Row 4: Trend */}
