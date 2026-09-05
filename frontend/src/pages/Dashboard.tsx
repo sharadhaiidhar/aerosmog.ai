@@ -68,23 +68,25 @@ const getDefaultAdvisory = (city: string, lat: number, lon: number): AdvisoryRes
 export default function Dashboard() {
   const sessionId = getSessionId();
   const [location, setLocation] = useState<LocationResult | null>(null);
-  const [advisory, setAdvisory] = useState<AdvisoryResponse | null>(null);
+  // Initialize with complete data immediately — screen can NEVER be blank
+  const [advisory, setAdvisory] = useState<AdvisoryResponse>(() => getDefaultAdvisory('Your Area', 18.5204, 73.8567));
   const [trend, setTrend] = useState<TrendEntry[]>([]);
   const [history, setHistory] = useState<AlertHistory[]>([]);
   const [loading, setLoading] = useState(false);
-  const [locLoading, setLocLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(new Date());
   const [themeOverride, setThemeOverride] = useState<string | null>(null);
 
   useEffect(() => {
-    setLocLoading(true);
     detectLocation().then(loc => {
       if (loc) {
         setLocation(loc);
-        // Immediately render default data so screen is NEVER blank
-        setAdvisory(prev => prev || getDefaultAdvisory(loc.city, loc.lat, loc.lon));
+        setAdvisory(prev => ({
+          ...prev,
+          city: loc.city,
+          lat: loc.lat,
+          lon: loc.lon,
+        }));
       }
-      setLocLoading(false);
     });
   }, []);
 
@@ -115,11 +117,6 @@ export default function Dashboard() {
 
   useEffect(() => { if (location) fetchAll(); }, [location]);
 
-  if (locLoading) return (
-    <div className="page space-y">
-      <CardSkeleton /><div className="grid-2"><CardSkeleton /><CardSkeleton /></div><CardSkeleton />
-    </div>
-  );
 
   const activeAdvisory = advisory;
   const aqiInfo = activeAdvisory ? getAqiInfo(activeAdvisory.aqi.aqi) : null;
