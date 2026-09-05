@@ -2,9 +2,16 @@
 import { getRiskColor, getRiskEmoji } from '../utils/aqi';
 import { ShieldAlert, CheckCircle } from 'lucide-react';
 
-interface Props { text: string; risk: string; actions: string[]; }
+import { VoiceDoctor } from './VoiceDoctor';
 
-export function AdvisoryCard({ text, risk, actions }: Props) {
+interface Props {
+  text: string;
+  risk: string;
+  actions: string[];
+  city?: string;
+}
+
+export function AdvisoryCard({ text, risk, actions, city = 'Your Area' }: Props) {
   const rColor = getRiskColor(risk);
   const rEmoji = getRiskEmoji(risk);
   const rLabel = risk.replace('_', ' ').toUpperCase();
@@ -12,10 +19,12 @@ export function AdvisoryCard({ text, risk, actions }: Props) {
   return (
     <div className="card">
       <div className="flex-between mb-3" style={{ flexWrap: 'wrap', gap: 8 }}>
-        <div className="flex-center gap-2">
+        <div className="flex-center gap-2 flex-wrap">
           <ShieldAlert size={18} className="text-accent" />
           <span className="font-semibold text-white text-sm">AI Health Advisory</span>
           <span className="badge badge-accent">Groq LLaMA-3.3</span>
+          {/* AI Voice Doctor Button */}
+          <VoiceDoctor text={text} city={city} riskLevel={rLabel} />
         </div>
         <div className="badge" style={{
           background: rColor + '22', color: rColor,

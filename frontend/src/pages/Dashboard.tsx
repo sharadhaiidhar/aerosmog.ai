@@ -13,12 +13,15 @@ import { ForecastStrip } from '../components/ForecastStrip';
 import { TrendChart } from '../components/TrendChart';
 import { CardSkeleton } from '../components/Skeleton';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
+import { JudgeSimulator } from '../components/JudgeSimulator';
+import { ARSmogVision } from '../components/ARSmogVision';
 import { getAqiInfo, getRiskColor } from '../utils/aqi';
 
 export default function Dashboard() {
   const sessionId = getSessionId();
   const [location, setLocation] = useState<LocationResult | null>(null);
   const [advisory, setAdvisory] = useState<AdvisoryResponse | null>(null);
+  const [simulatedAdvisory, setSimulatedAdvisory] = useState<AdvisoryResponse | null>(null);
   const [trend, setTrend] = useState<TrendEntry[]>([]);
   const [history, setHistory] = useState<AlertHistory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,14 +65,15 @@ export default function Dashboard() {
     </div>
   );
 
-  const aqiInfo = advisory ? getAqiInfo(advisory.aqi.aqi) : null;
+  const activeAdvisory = simulatedAdvisory || advisory;
+  const aqiInfo = activeAdvisory ? getAqiInfo(activeAdvisory.aqi.aqi) : null;
 
   return (
     <>
       {/* ── Immersive Ambient Background (Sun Rays, 3D Clouds, Raindrops) ── */}
       <AtmosphericBackground
-        weatherDesc={themeOverride || advisory?.weather?.weather_description || 'Clear'}
-        aqi={advisory?.aqi?.aqi}
+        weatherDesc={themeOverride || activeAdvisory?.weather?.weather_description || 'Clear'}
+        aqi={activeAdvisory?.aqi?.aqi}
       />
 
       <div className="page space-y" style={{ position: 'relative', zIndex: 1 }}>
@@ -79,9 +83,14 @@ export default function Dashboard() {
             <div className="flex-center gap-2">
               <MapPin size={15} className="text-accent" />
               <span className="font-bold text-lg text-white">
-                {location ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'Detecting...'}
+                {activeAdvisory ? activeAdvisory.city : location ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'Detecting...'}
               </span>
               {location && <span className="badge badge-accent">via {location.source}</span>}
+              {simulatedAdvisory && (
+                <span className="badge" style={{ background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
+                  Simulated Demo
+                </span>
+              )}
             </div>
             {lastUpdated && (
               <div className="flex-center gap-1 text-xs text-muted mt-1">
@@ -90,8 +99,23 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Ambience & Refresh controls */}
+          {/* Ambience, AR Vision, Judge Simulator & Refresh controls */}
           <div className="flex-center gap-2 flex-wrap">
+            {/* AR Smog Vision Button */}
+            <ARSmogVision
+              aqi={activeAdvisory?.aqi?.aqi || 45}
+              pm25={activeAdvisory?.aqi?.pm25 || 15}
+              city={activeAdvisory?.city || location?.city || 'Your Area'}
+            />
+
+            {/* Hackathon Judge Crisis Simulator */}
+            {advisory && (
+              <JudgeSimulator
+                currentAdvisory={advisory}
+                onSimulate={(sim) => setSimulatedAdvisory(sim)}
+              />
+            )}
+
             {/* Quick Atmosphere Preview Pills */}
             <div className="flex-center gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)' }}>
               <button
@@ -162,14 +186,14 @@ export default function Dashboard() {
       {/* Skeletons while loading */}
       {loading && !advisory && <div className="grid-2"><CardSkeleton /><CardSkeleton /></div>}
 
-      {advisory && (() => {
+      {activeAdvisory && (() => {
         const pollutants = [
-          { k: 'pm25', label: 'PM2.5', v: advisory.aqi.pm25 },
-          { k: 'pm10', label: 'PM10',  v: advisory.aqi.pm10  },
-          { k: 'o3',   label: 'O₃',   v: advisory.aqi.o3    },
-          { k: 'no2',  label: 'NO₂',  v: advisory.aqi.no2   },
-          { k: 'so2',  label: 'SO₂',  v: advisory.aqi.so2   },
-          { k: 'co',   label: 'CO',   v: advisory.aqi.co    },
+          { k: 'pm25', label: 'PM2.5', v: activeAdvisory.aqi.pm25 },
+          { k: 'pm10', label: 'PM10',  v: activeAdvisory.aqi.pm10  },
+          { k: 'o3',   label: 'O₃',   v: activeAdvisory.aqi.o3    },
+          { k: 'no2',  label: 'NO₂',  v: activeAdvisory.aqi.no2   },
+          { k: 'so2',  label: 'SO₂',  v: activeAdvisory.aqi.so2   },
+          { k: 'co',   label: 'CO',   v: activeAdvisory.aqi.co    },
         ].filter(p => p.v != null);
 
         return (
@@ -178,7 +202,7 @@ export default function Dashboard() {
             <div className="grid-2">
               <div className="card flex-col" style={{ alignItems: 'center', gap: 8 }}>
                 <div className="text-xs font-semibold text-muted self-start">AIR QUALITY INDEX</div>
-                <AqiGauge aqi={advisory.aqi.aqi} category={advisory.aqi.aqi_category} />
+                <AqiGauge aqi={activeAdvisory.aqi.aqi} category={activeAdvisory.aqi.aqi_category} />
                 <div className="grid-3 w-full mt-1">
                   {pollutants.map(p => (
                     <div key={p.k} className="inner-card" style={{ textAlign: 'center' }}>
@@ -188,17 +212,26 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
-              <WeatherCard data={advisory.weather} />
+              <WeatherCard data={activeAdvisory.weather} />
             </div>
 
-            {/* Row 2: AI Advisory */}
-            <AdvisoryCard text={advisory.advisory_text} risk={advisory.risk_level} actions={advisory.action_items} />
+            {/* Row 2: AI Advisory + AI Voice Doctor */}
+            <AdvisoryCard
+              text={activeAdvisory.advisory_text}
+              risk={activeAdvisory.risk_level}
+              actions={activeAdvisory.action_items}
+              city={activeAdvisory.city}
+            />
 
             {/* Row 3: Gen-Z Vibe & Smog Index */}
-            <GenZFeatures weather={advisory.weather} aqi={advisory.aqi} city={location?.city || 'Your City'} />
+            <GenZFeatures
+              weather={activeAdvisory.weather}
+              aqi={activeAdvisory.aqi}
+              city={activeAdvisory.city || location?.city || 'Your City'}
+            />
 
             {/* Row 4: Forecast */}
-            <ForecastStrip forecast={advisory.forecast} />
+            <ForecastStrip forecast={activeAdvisory.forecast} />
 
             {/* Row 4: Trend */}
             <TrendChart trend={trend} />
