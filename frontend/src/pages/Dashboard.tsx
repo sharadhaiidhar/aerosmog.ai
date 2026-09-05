@@ -13,7 +13,6 @@ import { ForecastStrip } from '../components/ForecastStrip';
 import { TrendChart } from '../components/TrendChart';
 import { CardSkeleton } from '../components/Skeleton';
 import { AtmosphericBackground } from '../components/AtmosphericBackground';
-import { JudgeSimulator } from '../components/JudgeSimulator';
 import { ARSmogVision } from '../components/ARSmogVision';
 import { getAqiInfo, getRiskColor } from '../utils/aqi';
 
@@ -21,7 +20,6 @@ export default function Dashboard() {
   const sessionId = getSessionId();
   const [location, setLocation] = useState<LocationResult | null>(null);
   const [advisory, setAdvisory] = useState<AdvisoryResponse | null>(null);
-  const [simulatedAdvisory, setSimulatedAdvisory] = useState<AdvisoryResponse | null>(null);
   const [trend, setTrend] = useState<TrendEntry[]>([]);
   const [history, setHistory] = useState<AlertHistory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,15 +63,15 @@ export default function Dashboard() {
     </div>
   );
 
-  const activeAdvisory = simulatedAdvisory || advisory;
+  const activeAdvisory = advisory;
   const aqiInfo = activeAdvisory ? getAqiInfo(activeAdvisory.aqi.aqi) : null;
 
   return (
     <>
       {/* ── Immersive Ambient Background (Sun Rays, 3D Clouds, Raindrops) ── */}
       <AtmosphericBackground
-        weatherDesc={themeOverride || activeAdvisory?.weather?.weather_description || 'Clear'}
-        aqi={activeAdvisory?.aqi?.aqi}
+        weatherDesc={themeOverride || advisory?.weather?.weather_description || 'Clear'}
+        aqi={advisory?.aqi?.aqi}
       />
 
       <div className="page space-y" style={{ position: 'relative', zIndex: 1 }}>
@@ -83,14 +81,9 @@ export default function Dashboard() {
             <div className="flex-center gap-2">
               <MapPin size={15} className="text-accent" />
               <span className="font-bold text-lg text-white">
-                {activeAdvisory ? activeAdvisory.city : location ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'Detecting...'}
+                {advisory ? advisory.city : location ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'Detecting...'}
               </span>
               {location && <span className="badge badge-accent">via {location.source}</span>}
-              {simulatedAdvisory && (
-                <span className="badge" style={{ background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
-                  Simulated Demo
-                </span>
-              )}
             </div>
             {lastUpdated && (
               <div className="flex-center gap-1 text-xs text-muted mt-1">
@@ -99,22 +92,14 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Ambience, AR Vision, Judge Simulator & Refresh controls */}
+          {/* Ambience, AR Vision & Refresh controls */}
           <div className="flex-center gap-2 flex-wrap">
             {/* AR Smog Vision Button */}
             <ARSmogVision
-              aqi={activeAdvisory?.aqi?.aqi || 45}
-              pm25={activeAdvisory?.aqi?.pm25 || 15}
-              city={activeAdvisory?.city || location?.city || 'Your Area'}
+              aqi={advisory?.aqi?.aqi || 45}
+              pm25={advisory?.aqi?.pm25 || 15}
+              city={advisory?.city || location?.city || 'Your Area'}
             />
-
-            {/* Hackathon Judge Crisis Simulator */}
-            {advisory && (
-              <JudgeSimulator
-                currentAdvisory={advisory}
-                onSimulate={(sim) => setSimulatedAdvisory(sim)}
-              />
-            )}
 
             {/* Quick Atmosphere Preview Pills */}
             <div className="flex-center gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)' }}>
