@@ -88,6 +88,15 @@ def delete_profile(session_id: str, db: Session = Depends(get_session)):
     db.commit()
 
 
+@router.get("/list/all", response_model=list[UserProfileRead])
+def list_all_profiles(limit: int = 100, db: Session = Depends(get_session)):
+    """Admin view: Fetch all registered user profiles."""
+    profiles = db.exec(
+        select(UserProfile).order_by(UserProfile.created_at.desc()).limit(limit)
+    ).all()
+    return profiles
+
+
 @router.get("/options/all")
 def get_profile_options():
     """Return all valid enum options for profile form dropdowns."""

@@ -149,6 +149,14 @@ async def generate_health_advisory(
     )
 
 
+@router.get("/all", response_model=List[AlertHistoryRead])
+def get_all_advisories(limit: int = 100, db: Session = Depends(get_session)):
+    """Admin view: Fetch all generated advisories across all users."""
+    return db.exec(
+        select(AlertHistory).order_by(AlertHistory.created_at.desc()).limit(limit)
+    ).all()
+
+
 @router.get("/history", response_model=List[AlertHistoryRead])
 def get_alert_history(
     session_id: str = Query(...),
