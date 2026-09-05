@@ -39,20 +39,27 @@ export default function Dashboard() {
 
   const fetchAll = useCallback(async () => {
     if (!location) return;
-    setLoading(true); setError(null);
+    setLoading(true);
     try {
-      const [adv, tr, hist] = await Promise.all([
-        generateAdvisory(sessionId, location.lat, location.lon),
-        getAqiTrend(sessionId, 7),
-        getAlertHistory(sessionId, 7),
-      ]);
+      // 1. Primary advisory fetch
+      const adv = await generateAdvisory(sessionId, location.lat, location.lon);
       setAdvisory(adv);
-      setTrend(tr.trend ?? []);
-      setHistory(hist);
+      setError(null);
       setLastUpdated(new Date());
+
+      // 2. Trend and history fetched non-blockingly
+      getAqiTrend(sessionId, 7)
+        .then(tr => setTrend(tr?.trend ?? []))
+        .catch(() => {});
+
+      getAlertHistory(sessionId, 7)
+        .then(hist => setHistory(hist ?? []))
+        .catch(() => {});
     } catch {
       setError('Backend server is waking up or busy. Please click "Refresh" in a moment.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, [location, sessionId]);
 
   useEffect(() => { if (location) fetchAll(); }, [location]);
@@ -161,8 +168,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-      {/* Error */}
-      {error && (
+      {/* Error (only if advisory could not be loaded) */}
+      {error && !advisory && (
         <div className="card" style={{ borderColor: 'rgba(255,68,68,0.4)', background: 'rgba(255,0,0,0.06)', color: '#ff8888' }}>
           ⚠️ {error}
         </div>
